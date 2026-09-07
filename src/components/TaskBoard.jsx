@@ -1,19 +1,29 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TaskForm from './TaskForm'
 import TaskList from './TaskList'
 
-let nextId = 1
+const STORAGE_KEY = 'tasks'
+
+function loadTasks() {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  return saved ? JSON.parse(saved) : []
+}
 
 function TaskBoard() {
-  const [tasks, setTasks] = useState([])
+  const [tasks, setTasks] = useState(loadTasks)
+  const [nextId, setNextId] = useState(
+    () => tasks.reduce((max, task) => Math.max(max, task.id), 0) + 1,
+  )
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
+  }, [tasks])
 
   function addTask(text) {
     const trimmed = text.trim()
     if (!trimmed) return
-    setTasks((prev) => [
-      ...prev,
-      { id: nextId++, text: trimmed, done: false },
-    ])
+    setTasks((prev) => [...prev, { id: nextId, text: trimmed, done: false }])
+    setNextId((id) => id + 1)
   }
 
   function toggleTask(id) {
